@@ -1,1 +1,335 @@
+# ইসলামী বিশ্বকোষ ও আল হাদিস S2 — হাদিস ভিডিও কিট: GitHub Actions
+# S7.1: যাচাই (check) + ম্যাট্রিক্স তৈরি (prepare) + প্রিভিউ স্টিল (preview)
+# S7.2: ভিডিও রেন্ডার (render) — needs: [check, prepare], matrix: fromJSON(needs.prepare.outputs.matrix)
+#
+# ট্রিগার শুধু ম্যানুয়াল (workflow_dispatch) — মিনিট বাঁচাতে।
+# নোট: রুটে package-lock.json নেই, তাই `setup-node`-এর `cache: npm` চলত না (লকফাইল না পেলে ব্যর্থ হয়);
+#       তার বদলে `actions/cache` দিয়ে ~/.npm ক্যাশ (কী = package.json-এর হ্যাশ)।
 
+name: render
+
+on:
+  workflow_dispatch:
+    inputs:
+      formats:
+        description: 'কী চালাবেন? preview = শুধু লেআউট-স্টিল (দ্রুত); বাকিগুলো ভিডিও রেন্ডার; all = ৪টিই'
+        type: choice
+        required: true
+        default: preview
+        options:
+          - preview
+          - 16x9-HD
+          - 16x9-4K
+          - 9x16-HD
+          - 9x16-4K
+          - all
+
+permissions:
+  contents: read
+
+env:
+  # Chrome (Remotion) চালানোর জন্য দরকারি লাইব্রেরি — ubuntu-latest = 24.04 (libasound2t64)
+  CHROME_LIBS: >-
+    libnss3 libdbus-1-3 libatk1.0-0 libgbm-dev libasound2t64 libxrandr2 libxkbcommon-dev
+    libxfixes3 libxcomposite1 libxdamage1 libatk-bridge2.0-0 libpango-1.0-0 libcairo2 libcups2
+
+jobs:
+  # ------------------------------------------------------------------ ১) যাচাই
+  check:
+    name: check (সিঙ্ক + টাইপ + কম্পোজিশন)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm ক্যাশ
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: ffmpeg আছে কি (সাইলেন্স যাচাইয়ের জন্য)
+        run: |
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          ffmpeg -version | head -n 1
+
+      - name: npm install
+        run: npm install --no-audit --no-fund
+
+      - name: সাইলেন্স যাচাই (অডিও ↔ synced JSON) — ফেইল হলে থামবে
+        run: npm run check
+
+      - name: টাইপ-চেক
+        run: npx tsc --noEmit
+
+      - name: Chrome ডিপেন্ডেন্সি + ব্রাউজার
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $CHROME_LIBS
+          npx remotion browser ensure
+
+      - name: কম্পোজিশন তালিকা
+        run: |
+          set -euo pipefail
+          npx remotion compositions index.ts 2>&1 | tee compositions.log
+          for id in Hadis-16x9 Hadis-9x16; do
+            if ! grep -q "$id" compositions.log; then
+              echo "::error::কম্পোজিশন '$id' তালিকায় নেই"
+              exit 1
+            fi
+          done
+          # বর্তমান অডিওতে মোট ১৩০০ ফ্রেম (৩৮.৩২ সে. + ৫ সে. আউটরো) — অডিও বদলালে অন্য হতে পারে, তাই শুধু সতর্কতা
+          if ! grep -q "1300" compositions.log; then
+            echo "::warning::১৩০০ ফ্রেম দেখা যায়নি — compositions.log দেখুন (অডিও-দৈর্ঘ্য বদলেছে কি?)"
+          fi
+
+  # ------------------------------------------------------------------ ২) ম্যাট্রিক্স তৈরি
+  prepare:
+    name: prepare (ইনপুট → ম্যাট্রিক্স)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      has_video: ${{ steps.plan.outputs.has_video }}
+      run_preview: ${{ steps.plan.outputs.run_preview }}
+    steps:
+      - name: ইনপুট থেকে পরিকল্পনা
+        id: plan
+        env:
+          FORMATS: ${{ inputs.formats }}
+        run: |
+          set -euo pipefail
+          # config.ts-এর RENDER_TARGETS-এর প্রতিচ্ছবি (w/h = ফাইনাল পিক্সেল মাপ, S7.2-এর ffprobe যাচাইয়ের জন্য)।
+          # শুধু bash — jq/node-এর ওপর নির্ভরতা নেই।
+          T1='{"id":"16x9-HD","comp":"Hadis-16x9","scale":1,"crf":20,"out":"hadis0101-16x9-HD.mp4","w":1920,"h":1080}'
+          T2='{"id":"16x9-4K","comp":"Hadis-16x9","scale":2,"crf":18,"out":"hadis0101-16x9-4K.mp4","w":3840,"h":2160}'
+          T3='{"id":"9x16-HD","comp":"Hadis-9x16","scale":1,"crf":20,"out":"hadis0101-9x16-HD.mp4","w":1080,"h":1920}'
+          T4='{"id":"9x16-4K","comp":"Hadis-9x16","scale":2,"crf":18,"out":"hadis0101-9x16-4K.mp4","w":2160,"h":3840}'
+          PREVIEW=false
+          case "$FORMATS" in
+            preview)  INCLUDE=""; PREVIEW=true ;;
+            all)      INCLUDE="$T1,$T2,$T3,$T4" ;;
+            16x9-HD)  INCLUDE="$T1" ;;
+            16x9-4K)  INCLUDE="$T2" ;;
+            9x16-HD)  INCLUDE="$T3" ;;
+            9x16-4K)  INCLUDE="$T4" ;;
+            *)        echo "::error::অজানা formats মান: '$FORMATS'"; exit 1 ;;
+          esac
+          MATRIX="{\"include\":[${INCLUDE}]}"
+          if [ -n "$INCLUDE" ]; then HAS_VIDEO=true; else HAS_VIDEO=false; fi
+          {
+            echo "matrix=$MATRIX"
+            echo "has_video=$HAS_VIDEO"
+            echo "run_preview=$PREVIEW"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### পরিকল্পনা"
+            echo "- formats: \`$FORMATS\`"
+            echo "- প্রিভিউ স্টিল: \`$PREVIEW\`"
+            echo "- ভিডিও রেন্ডার: \`$HAS_VIDEO\`"
+            echo "- ম্যাট্রিক্স: \`$MATRIX\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # ------------------------------------------------------------------ ৩) প্রিভিউ স্টিল
+  preview:
+    name: preview (লেআউট-স্টিল)
+    needs: [check, prepare]
+    if: needs.prepare.outputs.run_preview == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm ক্যাশ
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: npm install
+        run: npm install --no-audit --no-fund
+
+      - name: Chrome ডিপেন্ডেন্সি + ব্রাউজার
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $CHROME_LIBS
+          npx remotion browser ensure
+
+      - name: স্টিল রেন্ডার (দুই কম্পোজিশন × ১১ ফ্রেম)
+        run: |
+          set -euo pipefail
+          mkdir -p preview
+          # ০ = শুরু · ৬০/৩০০ = হেডার/ক্যাপশন · ৪৮০ = আরবি + ক্যাপশন · ৫৬০/৭০০/১০০০ = ক্যাপশন/কার্ড
+          # ১১৬০/১১৯০/১২৫০/১২৯৯ = আউটরো (অডিও শেষ ১১৫০)
+          FRAMES="0 60 300 480 560 700 1000 1160 1190 1250 1299"
+          for COMP in Hadis-16x9 Hadis-9x16; do
+            for N in $FRAMES; do
+              OUT=$(printf 'preview/%s-f%04d.png' "$COMP" "$N")
+              echo "::group::$COMP ফ্রেম $N"
+              npx remotion still index.ts "$COMP" "$OUT" --frame="$N" --scale=1 --timeout=120000
+              echo "::endgroup::"
+            done
+          done
+          ls -la preview
+
+      - name: স্টিল আর্টিফ্যাক্ট
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadis0101-preview
+          path: preview/*.png
+          if-no-files-found: error
+          retention-days: 14
+
+  # ------------------------------------------------------------------ ৪) ভিডিও রেন্ডার (S7.2)
+  render:
+    name: render (${{ matrix.id }})
+    needs: [check, prepare]
+    if: needs.prepare.outputs.has_video == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    env:
+      # ffprobe যাচাইয়ের প্রত্যাশা: ১৩০০ ফ্রেম ÷ ৩০ fps = ৪৩.৩৩ সে. (৩৮.৩২ সে. অডিও + ৫ সে. আউটরো)
+      EXPECTED_SEC: '43.33'
+      DURATION_TOLERANCE: '0.5'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: npm ক্যাশ
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package.json') }}
+          restore-keys: |
+            npm-${{ runner.os }}-
+
+      - name: ffmpeg/ffprobe আছে কি (রেন্ডার-পরবর্তী যাচাইয়ের জন্য)
+        run: |
+          if ! command -v ffprobe >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          ffprobe -version | head -n 1
+
+      - name: npm install
+        run: npm install --no-audit --no-fund
+
+      - name: Chrome ডিপেন্ডেন্সি + ব্রাউজার
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y $CHROME_LIBS
+          npx remotion browser ensure
+
+      - name: রেন্ডার (${{ matrix.id }} — ${{ matrix.w }}×${{ matrix.h }})
+        env:
+          COMP: ${{ matrix.comp }}
+          OUT: ${{ matrix.out }}
+          SCALE: ${{ matrix.scale }}
+          CRF: ${{ matrix.crf }}
+        run: |
+          set -euo pipefail
+          npx remotion render index.ts "$COMP" "$OUT" \
+            --scale="$SCALE" \
+            --codec=h264 \
+            --crf="$CRF" \
+            --pixel-format=yuv420p \
+            --audio-codec=aac \
+            --audio-bitrate=192k \
+            --concurrency=4 \
+            --timeout=120000
+          ls -la "$OUT"
+
+      - name: ffprobe যাচাই (রেজোলিউশন · দৈর্ঘ্য · অডিও স্ট্রিম) — ফেইল করলে জব ফেইল
+        env:
+          OUT: ${{ matrix.out }}
+          EXPECT_W: ${{ matrix.w }}
+          EXPECT_H: ${{ matrix.h }}
+        run: |
+          set -euo pipefail
+          if [ ! -s "$OUT" ]; then
+            echo "::error::আউটপুট ফাইল নেই বা ফাঁকা: $OUT"
+            exit 1
+          fi
+
+          # ১) ভিডিও স্ট্রিম: কোডেক, মাপ, পিক্সেল-ফরম্যাট
+          VIDEO=$(ffprobe -v error -select_streams v:0 \
+            -show_entries stream=codec_name,width,height,pix_fmt \
+            -of csv=p=0 "$OUT")
+          echo "ভিডিও স্ট্রিম: $VIDEO"
+          IFS=',' read -r VCODEC VW VH VPIX <<< "$VIDEO"
+          if [ "$VCODEC" != "h264" ]; then
+            echo "::error::ভিডিও কোডেক h264 নয়: '$VCODEC'"; exit 1
+          fi
+          if [ "$VW" != "$EXPECT_W" ] || [ "$VH" != "$EXPECT_H" ]; then
+            echo "::error::রেজোলিউশন মেলেনি: পাওয়া ${VW}x${VH}, প্রত্যাশিত ${EXPECT_W}x${EXPECT_H}"
+            exit 1
+          fi
+          if [ "$VPIX" != "yuv420p" ]; then
+            echo "::error::পিক্সেল-ফরম্যাট yuv420p নয়: '$VPIX'"; exit 1
+          fi
+
+          # ২) অডিও স্ট্রিম: থাকতে হবে, aac
+          ACODEC=$(ffprobe -v error -select_streams a:0 \
+            -show_entries stream=codec_name -of csv=p=0 "$OUT")
+          echo "অডিও স্ট্রিম: ${ACODEC:-<নেই>}"
+          if [ -z "$ACODEC" ]; then
+            echo "::error::অডিও স্ট্রিম নেই — ভিডিও নিঃশব্দ"; exit 1
+          fi
+          if [ "$ACODEC" != "aac" ]; then
+            echo "::error::অডিও কোডেক aac নয়: '$ACODEC'"; exit 1
+          fi
+
+          # ৩) দৈর্ঘ্য ≈ ৪৩.৩৩ সে. (± সহনসীমা)
+          DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$OUT")
+          echo "দৈর্ঘ্য: ${DUR} সে. (প্রত্যাশিত ${EXPECTED_SEC} ± ${DURATION_TOLERANCE})"
+          if ! awk -v d="$DUR" -v e="$EXPECTED_SEC" -v t="$DURATION_TOLERANCE" \
+               'BEGIN { diff = d - e; if (diff < 0) diff = -diff; exit !(d != "" && diff <= t) }'; then
+            echo "::error::দৈর্ঘ্য প্রত্যাশার বাইরে: ${DUR} সে. (প্রত্যাশিত ${EXPECTED_SEC} ± ${DURATION_TOLERANCE})"
+            exit 1
+          fi
+
+          SIZE=$(stat -c %s "$OUT")
+          {
+            echo "### ${OUT}"
+            echo "- ভিডিও: \`${VCODEC}\` ${VW}×${VH} \`${VPIX}\`"
+            echo "- অডিও: \`${ACODEC}\`"
+            echo "- দৈর্ঘ্য: ${DUR} সে."
+            echo "- আকার: $((SIZE / 1024 / 1024)) MB"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "✅ যাচাই পাস: $OUT"
+
+      - name: MP4 আর্টিফ্যাক্ট
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadis0101-${{ matrix.id }}
+          path: ${{ matrix.out }}
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
