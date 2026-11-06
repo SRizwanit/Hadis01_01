@@ -1,0 +1,27 @@
+{
+  "name": "hadis-video-kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ইসলামী বিশ্বকোষ ও আল হাদিস S2 — আজকের হাদিস ২D ভিডিও কিট (Remotion)",
+  "scripts": {
+    "dev": "remotion studio index.ts",
+    "check": "node check-sync.mjs --file hadis0101.synced.json",
+    "fix-sync": "node sync-fix.mjs",
+    "compositions": "remotion compositions index.ts",
+    "typecheck": "tsc --noEmit",
+    "check:original": "node check-sync.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.340",
+    "@remotion/google-fonts": "4.0.340",
+    "@remotion/media-utils": "4.0.340",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.340"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.8.3"
+  }
+}

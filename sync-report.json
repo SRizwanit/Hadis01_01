@@ -1,0 +1,206 @@
+{
+  "generatedBy": "check-sync.mjs",
+  "params": {
+    "wav": "hadis0101.wav",
+    "json": "hadis0101.synced.json",
+    "noiseDb": -35,
+    "minSilence": 0.25,
+    "tolerance": 0.3,
+    "overlapRatio": 0.7
+  },
+  "audioDuration": 38.32,
+  "json": {
+    "words": 83,
+    "start": 0,
+    "end": 38.32
+  },
+  "speech": {
+    "start": 0,
+    "end": 38.32,
+    "trailingSilence": 0
+  },
+  "silences": [
+    {
+      "start": 1.95,
+      "end": 2.42,
+      "duration": 0.47
+    },
+    {
+      "start": 6.072,
+      "end": 6.527,
+      "duration": 0.455
+    },
+    {
+      "start": 7.111,
+      "end": 7.606,
+      "duration": 0.496
+    },
+    {
+      "start": 11.836,
+      "end": 12.387,
+      "duration": 0.551
+    },
+    {
+      "start": 15.301,
+      "end": 15.795,
+      "duration": 0.494
+    },
+    {
+      "start": 17.544,
+      "end": 18.064,
+      "duration": 0.52
+    },
+    {
+      "start": 23.56,
+      "end": 23.864,
+      "duration": 0.304
+    },
+    {
+      "start": 30.893,
+      "end": 31.264,
+      "duration": 0.371
+    }
+  ],
+  "internalSilences": [
+    {
+      "silence": [
+        1.95,
+        2.42
+      ],
+      "duration": 0.47,
+      "nearestPauseWord": "বলেন,",
+      "nearestPauseWordIndex": 4,
+      "nearestPauseWordEnd": 1.95,
+      "delta": 0,
+      "gapAfterWord": "বলেন,",
+      "gapAfterWordIndex": 4,
+      "aligned": true
+    },
+    {
+      "silence": [
+        6.072,
+        6.527
+      ],
+      "duration": 0.455,
+      "nearestPauseWord": "বলেন,",
+      "nearestPauseWordIndex": 14,
+      "nearestPauseWordEnd": 6.072,
+      "delta": 0,
+      "gapAfterWord": "বলেন,",
+      "gapAfterWordIndex": 14,
+      "aligned": true
+    },
+    {
+      "silence": [
+        7.111,
+        7.606
+      ],
+      "duration": 0.496,
+      "nearestPauseWord": "বলেন,",
+      "nearestPauseWordIndex": 14,
+      "nearestPauseWordEnd": 6.072,
+      "delta": 1.039,
+      "gapAfterWord": "উমর",
+      "gapAfterWordIndex": 16,
+      "aligned": true
+    },
+    {
+      "silence": [
+        11.836,
+        12.387
+      ],
+      "duration": 0.551,
+      "nearestPauseWord": "শুনেছি,",
+      "nearestPauseWordIndex": 25,
+      "nearestPauseWordEnd": 11.836,
+      "delta": 0,
+      "gapAfterWord": "শুনেছি,",
+      "gapAfterWordIndex": 25,
+      "aligned": true
+    },
+    {
+      "silence": [
+        15.301,
+        15.795
+      ],
+      "duration": 0.494,
+      "nearestPauseWord": "শুনেছি:",
+      "nearestPauseWordIndex": 34,
+      "nearestPauseWordEnd": 15.301,
+      "delta": 0,
+      "gapAfterWord": "শুনেছি:",
+      "gapAfterWordIndex": 34,
+      "aligned": true
+    },
+    {
+      "silence": [
+        17.544,
+        18.064
+      ],
+      "duration": 0.52,
+      "nearestPauseWord": "বিন-নিয়্যাত।",
+      "nearestPauseWordIndex": 37,
+      "nearestPauseWordEnd": 17.544,
+      "delta": 0,
+      "gapAfterWord": "বিন-নিয়্যাত।",
+      "gapAfterWordIndex": 37,
+      "aligned": true
+    },
+    {
+      "silence": [
+        23.56,
+        23.864
+      ],
+      "duration": 0.304,
+      "nearestPauseWord": "পাবে।",
+      "nearestPauseWordIndex": 49,
+      "nearestPauseWordEnd": 23.56,
+      "delta": 0,
+      "gapAfterWord": "পাবে।",
+      "gapAfterWordIndex": 49,
+      "aligned": true
+    },
+    {
+      "silence": [
+        30.893,
+        31.264
+      ],
+      "duration": 0.371,
+      "nearestPauseWord": "প্রাপ্য।",
+      "nearestPauseWordIndex": 67,
+      "nearestPauseWordEnd": 30.893,
+      "delta": 0,
+      "gapAfterWord": "প্রাপ্য।",
+      "gapAfterWordIndex": 67,
+      "aligned": true
+    }
+  ],
+  "wordsInSilence": [],
+  "checks": [
+    {
+      "id": "C1",
+      "name": "শুরু মিল",
+      "status": "PASS",
+      "detail": "JSON শুরু 0 বনাম অডিও বলা শুরু 0 (পার্থক্য 0 সে., সীমা ±0.3)"
+    },
+    {
+      "id": "C2",
+      "name": "শেষ মিল",
+      "status": "PASS",
+      "detail": "JSON শেষ 38.32 বনাম অডিও বলা শেষ 38.32 (পার্থক্য 0 সে., সীমা ±0.3)"
+    },
+    {
+      "id": "C3",
+      "name": "JSON অডিওর ভেতরে",
+      "status": "PASS",
+      "detail": "JSON শেষ 38.32 ≤ অডিও দৈর্ঘ্য 38.32"
+    },
+    {
+      "id": "C4",
+      "name": "মাঝের বিরতি",
+      "status": "PASS",
+      "detail": "8টি বিরতি; অমিল 0টি; সাইলেন্সের ভেতরে পড়া শব্দ 0টি"
+    }
+  ],
+  "overall": "PASS"
+}

@@ -1,0 +1,36 @@
+# ইসলামী বিশ্বকোষ ও আল হাদিস S2 — হাদিস ভিডিও কিট
+
+# নির্ভরতা
+node_modules/
+
+# রেন্ডার আউটপুট (রুটেই তৈরি হয়, গিটে যাবে না)
+*.mp4
+*.mov
+*.webm
+
+# প্রিভিউ স্টিল (CI আর্টিফ্যাক্ট হিসেবে আসে)
+*.png
+# …কিন্তু Outro-র Google Play badge (অ্যাসেট) ignore নয়
+!google-play-badge.png
+
+# স্থানীয় রানের আউটপুট (CI-তে আর্টিফ্যাক্ট হিসেবে আসে)
+preview/
+compositions.log
+
+# Remotion ক্যাশ/বিল্ড
+.remotion/
+build/
+out/
+
+# লগ ও সিস্টেম ফাইল
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# এডিটর
+.vscode/
+.idea/
+
+# নোট: এগুলো ইচ্ছাকৃতভাবে ignore করা হয়নি —
+#   logo.jpg, google-play-badge.png, hadis0101.json, hadis0101.synced.json, hadis0101.wav, sync-report.json

@@ -1,0 +1,193 @@
+{
+  "generatedBy": "sync-fix.mjs",
+  "params": {
+    "wav": "hadis0101.wav",
+    "input": "hadis0101.json",
+    "output": "hadis0101.synced.json",
+    "noiseDb": -35,
+    "minSilence": 0.25,
+    "maxDistance": 0.6,
+    "punctuationBonus": 0.6,
+    "minWordSeconds": 0.12,
+    "init": "orig"
+  },
+  "audioDuration": 38.32,
+  "speech": {
+    "start": 0,
+    "end": 38.32
+  },
+  "originalJson": {
+    "start": 0,
+    "end": 37
+  },
+  "anchors": [
+    {
+      "silence": [
+        1.95,
+        2.42
+      ],
+      "afterWordIndex": 4,
+      "afterWord": "বলেন,",
+      "nextWord": "আলকামা",
+      "originalEnd": 1.78,
+      "newEnd": 1.95,
+      "newNextStart": 2.42,
+      "distanceUsed": 0.106,
+      "pass": 1,
+      "confidence": "high"
+    },
+    {
+      "silence": [
+        6.072,
+        6.527
+      ],
+      "afterWordIndex": 14,
+      "afterWord": "বলেন,",
+      "nextWord": "আমি",
+      "originalEnd": 6.24,
+      "newEnd": 6.072,
+      "newNextStart": 6.527,
+      "distanceUsed": 0.391,
+      "pass": 1,
+      "confidence": "high"
+    },
+    {
+      "silence": [
+        7.111,
+        7.606
+      ],
+      "afterWordIndex": 16,
+      "afterWord": "উমর",
+      "nextWord": "ইবনুল",
+      "originalEnd": 7.13,
+      "newEnd": 7.111,
+      "newNextStart": 7.606,
+      "distanceUsed": 0.21,
+      "pass": 2,
+      "confidence": "low"
+    },
+    {
+      "silence": [
+        11.836,
+        12.387
+      ],
+      "afterWordIndex": 25,
+      "afterWord": "শুনেছি,",
+      "nextWord": "আমি",
+      "originalEnd": 11.14,
+      "newEnd": 11.836,
+      "newNextStart": 12.387,
+      "distanceUsed": 0.299,
+      "pass": 1,
+      "confidence": "high"
+    },
+    {
+      "silence": [
+        15.301,
+        15.795
+      ],
+      "afterWordIndex": 34,
+      "afterWord": "শুনেছি:",
+      "nextWord": "ইন্নামাল",
+      "originalEnd": 15.16,
+      "newEnd": 15.301,
+      "newNextStart": 15.795,
+      "distanceUsed": 0.4,
+      "pass": 1,
+      "confidence": "high"
+    },
+    {
+      "silence": [
+        17.544,
+        18.064
+      ],
+      "afterWordIndex": 37,
+      "afterWord": "বিন-নিয়্যাত।",
+      "nextWord": "প্রত্যেক",
+      "originalEnd": 16.49,
+      "newEnd": 17.544,
+      "newNextStart": 18.064,
+      "distanceUsed": 0.466,
+      "pass": 1,
+      "confidence": "medium"
+    },
+    {
+      "silence": [
+        23.56,
+        23.864
+      ],
+      "afterWordIndex": 49,
+      "afterWord": "পাবে।",
+      "nextWord": "তাই",
+      "originalEnd": 21.84,
+      "newEnd": 23.56,
+      "newNextStart": 23.864,
+      "distanceUsed": 0.344,
+      "pass": 2,
+      "confidence": "medium"
+    },
+    {
+      "silence": [
+        30.893,
+        31.264
+      ],
+      "afterWordIndex": 67,
+      "afterWord": "প্রাপ্য।",
+      "nextWord": "মনে",
+      "originalEnd": 29.87,
+      "newEnd": 30.893,
+      "newNextStart": 31.264,
+      "distanceUsed": 0.043,
+      "pass": 1,
+      "confidence": "high"
+    }
+  ],
+  "unassignedSilences": [],
+  "needsHumanReview": [
+    {
+      "silence": [
+        7.111,
+        7.606
+      ],
+      "afterWordIndex": 16,
+      "afterWord": "উমর",
+      "nextWord": "ইবনুল",
+      "originalEnd": 7.13,
+      "newEnd": 7.111,
+      "newNextStart": 7.606,
+      "distanceUsed": 0.21,
+      "pass": 2,
+      "confidence": "low"
+    },
+    {
+      "silence": [
+        17.544,
+        18.064
+      ],
+      "afterWordIndex": 37,
+      "afterWord": "বিন-নিয়্যাত।",
+      "nextWord": "প্রত্যেক",
+      "originalEnd": 16.49,
+      "newEnd": 17.544,
+      "newNextStart": 18.064,
+      "distanceUsed": 0.466,
+      "pass": 1,
+      "confidence": "medium"
+    },
+    {
+      "silence": [
+        23.56,
+        23.864
+      ],
+      "afterWordIndex": 49,
+      "afterWord": "পাবে।",
+      "nextWord": "তাই",
+      "originalEnd": 21.84,
+      "newEnd": 23.56,
+      "newNextStart": 23.864,
+      "distanceUsed": 0.344,
+      "pass": 2,
+      "confidence": "medium"
+    }
+  ]
+}
